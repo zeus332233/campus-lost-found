@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>失物招领列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f5f7fb; }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a73e8 0%, #0d47a1 100%);
+            color: white; padding-top: 1.5rem;
+        }
+        .sidebar h5 { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.75); border-radius: 8px; margin: 2px 8px; padding: 10px 16px; transition: all 0.2s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+        .sidebar .nav-link i { width: 20px; text-align: center; }
+        .main-content { padding: 0; background: #f5f7fb; }
+        .topbar { background: white; padding: 12px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; }
+        .topbar .brand { font-size: 1.15rem; font-weight: 700; color: #1a73e8; }
+        .content-area { padding: 24px; }
+        .breadcrumb { margin-bottom: 16px; font-size: 0.85rem; }
+
+        .filter-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .filter-card .form-label { font-weight: 600; font-size: 0.85rem; color: #555; }
+        .filter-card .form-control, .filter-card .form-select { border-radius: 8px; }
+
+        .item-card {
+            background: white; border-radius: 12px; overflow: hidden; border: none;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.2s;
+            cursor: pointer; text-decoration: none; color: #333; display: block; margin-bottom: 16px;
+        }
+        .item-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); color: #333; }
+        .item-card .card-body { padding: 0; display: flex; }
+        .item-card-img {
+            width: 140px; min-height: 120px; flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;
+        }
+        .item-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .item-card-info { padding: 16px; flex: 1; }
+        .item-card-info .title { font-weight: 600; font-size: 1.05rem; margin-bottom: 6px; }
+        .item-card-info .desc { font-size: 0.85rem; color: #6c757d; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .item-card-info .meta { font-size: 0.8rem; color: #adb5bd; margin-top: 8px; }
+
+        .badge-category { padding: 4px 10px; border-radius: 20px; font-weight: 500; font-size: 0.75rem; }
+        .empty-state { text-align: center; padding: 60px 0; color: #adb5bd; }
+        .empty-state i { font-size: 4rem; margin-bottom: 12px; }
+
+        .pagination .page-link { border-radius: 8px; margin: 0 2px; border: none; color: #1a73e8; }
+        .pagination .active .page-link { background: #1a73e8; color: white; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="text-center mb-3">
+                <i class="bi bi-mortarboard-fill fs-3"></i>
+                <h5 class="mt-2 mb-0">校园失物招领</h5>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 12px 16px;">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-grid-fill"></i> 首页总览</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/found-items"><i class="bi bi-box-seam me-2"></i> 失物招领列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items"><i class="bi bi-search me-2"></i> 寻物启事列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/found-items/create"><i class="bi bi-plus-circle me-2"></i> 捡到物品发布</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items/create"><i class="bi bi-question-circle me-2"></i> 丢失物品发布</a></li>
+                <li class="nav-item"><a class="nav-link" href="/notifications"><i class="bi bi-bell me-2"></i> 通知中心</a></li>
+                <li class="nav-item"><a class="nav-link" href="/user/profile"><i class="bi bi-person me-2"></i> 个人中心</a></li>
+            </ul>
+        </div>
+
+        <!-- 主区域 -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="topbar">
+                <div class="brand"><i class="bi bi-geo-alt-fill me-2"></i>智慧校园失物招领平台</div>
+                <a href="/found-items/create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>发布失物招领</a>
+            </div>
+            <div class="content-area">
+                <!-- 面包屑 -->
+                <nav class="breadcrumb">
+                    <a href="/dashboard" class="text-decoration-none text-muted">首页</a>
+                    <span class="mx-2">/</span>
+                    <span class="fw-bold">失物招领列表</span>
+                </nav>
+
+                <!-- 消息提示 -->
+                <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span>
+                    <span th:if="${matchInfo}" class="ms-2 badge bg-info" th:text="${matchInfo}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- 筛选面板 -->
+                <div class="filter-card">
+                    <form th:action="@{/found-items}" method="get" class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-search me-1"></i>关键词</label>
+                            <input type="text" name="keyword" class="form-control" placeholder="搜索标题或描述" th:value="${keyword}"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="bi bi-tag me-1"></i>类别</label>
+                            <select name="category" class="form-select">
+                                <option value="">全部类别</option>
+                                <option value="电子设备" th:selected="${category == '电子设备'}">电子设备</option>
+                                <option value="随身物品" th:selected="${category == '随身物品'}">随身物品</option>
+                                <option value="证件文件" th:selected="${category == '证件文件'}">证件文件</option>
+                                <option value="其他" th:selected="${category == '其他'}">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="bi bi-geo-alt me-1"></i>地点</label>
+                            <input type="text" name="location" class="form-control" placeholder="发现地点" th:value="${location}"/>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label"><i class="bi bi-flag me-1"></i>状态</label>
+                            <select name="status" class="form-select">
+                                <option value="">全部状态</option>
+                                <option value="SEARCHING" th:selected="${status == 'SEARCHING'}">寻找失主中</option>
+                                <option value="CLAIM_PENDING" th:selected="${status == 'CLAIM_PENDING'}">待认领</option>
+                                <option value="CLAIMED" th:selected="${status == 'CLAIMED'}">已认领</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>搜索</button>
+                            <a href="/found-items" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise me-1"></i>重置</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 列表卡片 -->
+                <div th:if="${foundItems != null and not foundItems.isEmpty()}">
+                    <a th:each="item : ${foundItems}" th:href="@{/found-items/{id}(id=${item.id})}" class="item-card">
+                        <div class="card-body">
+                            <div class="item-card-img">
+                                <img th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}"
+                                     th:src="${item.imageUrls.split(',')[0]}">
+                                <i th:unless="${item.imageUrls != null and !item.imageUrls.isEmpty()}" class="bi bi-box-seam"></i>
+                            </div>
+                            <div class="item-card-info">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="title" th:text="${item.title}"></div>
+                                    <span class="badge-category bg-primary bg-opacity-10 text-primary" th:text="${item.category}"></span>
+                                </div>
+                                <p class="desc" th:text="${item.description != null ? item.description : '暂无描述'}"></p>
+                                <div class="meta">
+                                    <span><i class="bi bi-geo-alt me-1"></i><span th:text="${item.location != null ? item.location : '未填写'}"></span></span>
+                                    <span class="mx-2">·</span>
+                                    <span><i class="bi bi-clock me-1"></i><span th:text="${item.foundTime != null ? dateUtils.formatTimestamp(item.foundTime) : '未知'}"></span></span>
+                                    <span class="mx-2">·</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning" th:if="${item.status == 'SEARCHING'}">寻找失主中</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info" th:if="${item.status == 'CLAIM_PENDING'}">待认领</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success" th:if="${item.status == 'CLAIMED'}">已认领</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div th:unless="${foundItems != null and not foundItems.isEmpty()}" class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p class="mt-2">没有找到相关失物招领信息</p>
+                    <a href="/found-items/create" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-1"></i>发布第一条</a>
+                </div>
+
+                <!-- 分页 -->
+                <div class="d-flex justify-content-between align-items-center mt-3" th:if="${total != null and total > 0}">
+                    <small class="text-muted">共 <span th:text="${total}">0</span> 条记录</small>
+                    <nav th:if="${totalPages > 1}">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 1 ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{/found-items(keyword=${keyword},category=${category},location=${location},status=${status},page=${currentPage - 1})}"><i class="bi bi-chevron-left"></i></a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(1, totalPages)}" class="page-item" th:classappend="${i == currentPage ? 'active' : ''}">
+                                <a class="page-link" th:href="@{/found-items(keyword=${keyword},category=${category},location=${location},status=${status},page=${i})}" th:text="${i}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == totalPages ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{/found-items(keyword=${keyword},category=${category},location=${location},status=${status},page=${currentPage + 1})}"><i class="bi bi-chevron-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

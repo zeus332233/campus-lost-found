@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_lost_found?serverTimezone=Asia/Shanghai
+    username: root
+    password: YOUR_DB_PASSWORD_HERE
+  thymeleaf:
+    cache: false
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  web:
+    resources:
+      static-locations: file:${upload.base-path},classpath:/static/
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+
+mybatis:
+  configuration:
+    database-id: mysql
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.demo.model
+
+logging:
+  level:
+    com.example.demo.mapper: DEBUG
+
+upload:
+  base-path: d:/sprintBoot.learn/demo/uploads

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>校园失物招领平台 - 首页</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f5f7fb; }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a73e8 0%, #0d47a1 100%);
+            color: white;
+            padding-top: 1.5rem;
+        }
+        .sidebar h5 { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.75);
+            border-radius: 8px;
+            margin: 2px 8px;
+            padding: 10px 16px;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar .nav-link i { width: 20px; text-align: center; }
+        .main-content { padding: 0; background: #f5f7fb; }
+        .topbar {
+            background: white;
+            padding: 12px 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar .brand { font-size: 1.15rem; font-weight: 700; color: #1a73e8; }
+        .search-bar-header { flex: 1; max-width: 500px; margin: 0 40px; }
+        .content-area { padding: 24px; }
+
+        /* 统计卡片 */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 24px;
+            border: none;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; }
+        .stat-label { color: #6c757d; font-size: 0.85rem; margin-top: 2px; }
+
+        /* 操作卡片 */
+        .action-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            border: 2px dashed #dee2e6;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
+        .action-card:hover {
+            border-color: #1a73e8;
+            background: #f0f7ff;
+            color: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(26,115,232,0.1);
+        }
+        .action-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+        /* 物品卡片 */
+        .item-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            display: block;
+            margin-bottom: 16px;
+        }
+        .item-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); color: #333; }
+        .item-card-img {
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            overflow: hidden;
+        }
+        .item-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .item-card-body { padding: 16px; }
+        .item-card-body .title { font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-card-body .meta { font-size: 0.8rem; color: #6c757d; }
+
+        .badge-category { padding: 4px 10px; border-radius: 20px; font-weight: 500; font-size: 0.75rem; }
+        .empty-state { text-align: center; padding: 48px 0; color: #adb5bd; }
+        .empty-state i { font-size: 3rem; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="text-center mb-3">
+                <i class="bi bi-mortarboard-fill fs-3"></i>
+                <h5 class="mt-2 mb-0">校园失物招领</h5>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 12px 16px;">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/dashboard"><i class="bi bi-grid-fill"></i> 首页总览</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/found-items"><i class="bi bi-box-seam me-2"></i> 失物招领列表</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/lost-items"><i class="bi bi-search me-2"></i> 寻物启事列表</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/found-items/create"><i class="bi bi-plus-circle me-2"></i> 捡到物品发布</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/lost-items/create"><i class="bi bi-question-circle me-2"></i> 丢失物品发布</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/notifications"><i class="bi bi-bell me-2"></i> 通知中心</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user/profile"><i class="bi bi-person me-2"></i> 个人中心</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主区域 -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <!-- 顶栏 -->
+            <div class="topbar">
+                <div class="brand"><i class="bi bi-geo-alt-fill me-2"></i>智慧校园失物招领平台</div>
+                <!-- 快速搜索 -->
+                <form class="search-bar-header d-flex" th:action="@{/found-items}" method="get">
+                    <input type="text" name="keyword" class="form-control form-control-sm" placeholder="搜索失物/寻物信息...">
+                    <button class="btn btn-primary btn-sm ms-2" type="submit"><i class="bi bi-search"></i></button>
+                </form>
+                <!-- 用户区域 -->
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/notifications" class="position-relative text-decoration-none" style="color:#555;">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span th:if="${unreadCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:0.65rem;" th:text="${unreadCount}">0</span>
+                    </a>
+                    <div class="dropdown">
+                        <a class="dropdown-toggle text-decoration-none" href="#" role="button" data-bs-toggle="dropdown" style="color:#333;">
+                            <i class="bi bi-person-circle me-1"></i><span th:text="${user != null ? user.username : '访客'}">用户</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/user/profile"><i class="bi bi-gear me-2"></i>个人中心</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/user/logout}" method="post">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>退出登录</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容区 -->
+            <div class="content-area">
+                <!-- 统计卡片 -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-box-seam"></i></div>
+                            <div>
+                                <div class="stat-number text-primary" th:text="${totalFound}">0</div>
+                                <div class="stat-label">失物招领总数</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="stat-icon bg-danger bg-opacity-10 text-danger me-3"><i class="bi bi-search"></i></div>
+                            <div>
+                                <div class="stat-number text-danger" th:text="${totalLost}">0</div>
+                                <div class="stat-label">寻物启事总数</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="stat-icon bg-success bg-opacity-10 text-success me-3"><i class="bi bi-check-circle"></i></div>
+                            <div>
+                                <div class="stat-number text-success" th:text="${claimedTotal}">0</div>
+                                <div class="stat-label">已成功归还</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6">
+                        <div class="stat-card d-flex align-items-center">
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3"><i class="bi bi-hourglass-split"></i></div>
+                            <div>
+                                <div class="stat-number text-warning" th:text="${pendingTotal}">0</div>
+                                <div class="stat-label">待处理认领</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷操作 -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <a href="/lost-items/create" class="action-card">
+                            <div class="action-icon text-danger"><i class="bi bi-question-circle-fill"></i></div>
+                            <h5>我丢失了物品</h5>
+                            <p class="text-muted mb-0 small">发布寻物启事，让更多人帮你找</p>
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/found-items/create" class="action-card">
+                            <div class="action-icon text-primary"><i class="bi bi-hand-thumbs-up-fill"></i></div>
+                            <h5>我捡到了物品</h5>
+                            <p class="text-muted mb-0 small">发布失物招领，帮忙找到失主</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 最新信息 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="bi bi-box-seam text-primary me-2"></i>最新失物招领</h5>
+                            <a href="/found-items" class="btn btn-sm btn-outline-primary">查看全部 <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                        <div th:if="${foundItems != null and not foundItems.isEmpty()}">
+                            <a th:each="item : ${foundItems}" th:href="@{/found-items/{id}(id=${item.id})}" class="item-card">
+                                <div class="item-card-img">
+                                    <img th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}"
+                                         th:src="${item.imageUrls.split(',')[0]}">
+                                    <i th:unless="${item.imageUrls != null and !item.imageUrls.isEmpty()}" class="bi bi-box-seam"></i>
+                                </div>
+                                <div class="item-card-body">
+                                    <div class="title" th:text="${item.title}"></div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="meta">
+                                            <i class="bi bi-geo-alt me-1"></i><span th:text="${item.location != null ? item.location : '未填写'}"></span>
+                                            <span class="mx-2">·</span>
+                                            <span th:text="${item.createdAt != null ? dateUtils.formatTimestamp(item.createdAt) : ''}"></span>
+                                        </div>
+                                        <span th:if="${item.category}" class="badge-category bg-primary bg-opacity-10 text-primary"
+                                              th:text="${item.category}"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div th:unless="${foundItems != null and not foundItems.isEmpty()}" class="empty-state">
+                            <i class="bi bi-inbox"></i><p class="mt-2">暂无失物招领信息</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="bi bi-search text-danger me-2"></i>最新寻物启事</h5>
+                            <a href="/lost-items" class="btn btn-sm btn-outline-danger">查看全部 <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                        <div th:if="${lostItems != null and not lostItems.isEmpty()}">
+                            <a th:each="item : ${lostItems}" th:href="@{/lost-items/{id}(id=${item.id})}" class="item-card">
+                                <div class="item-card-img" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <img th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}"
+                                         th:src="${item.imageUrls.split(',')[0]}">
+                                    <i th:unless="${item.imageUrls != null and !item.imageUrls.isEmpty()}" class="bi bi-search"></i>
+                                </div>
+                                <div class="item-card-body">
+                                    <div class="title" th:text="${item.title}"></div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="meta">
+                                            <i class="bi bi-geo-alt me-1"></i><span th:text="${item.location != null ? item.location : '未填写'}"></span>
+                                            <span class="mx-2">·</span>
+                                            <span th:text="${item.createdAt != null ? dateUtils.formatTimestamp(item.createdAt) : ''}"></span>
+                                        </div>
+                                        <span th:if="${item.category}" class="badge-category bg-danger bg-opacity-10 text-danger"
+                                              th:text="${item.category}"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div th:unless="${lostItems != null and not lostItems.isEmpty()}" class="empty-state">
+                            <i class="bi bi-inbox"></i><p class="mt-2">暂无寻物启事信息</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>通知中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f5f7fb; }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a73e8 0%, #0d47a1 100%);
+            color: white; padding-top: 1.5rem;
+        }
+        .sidebar h5 { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.75); border-radius: 8px; margin: 2px 8px; padding: 10px 16px; transition: all 0.2s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+        .sidebar .nav-link i { width: 20px; text-align: center; }
+        .main-content { padding: 0; background: #f5f7fb; }
+        .topbar { background: white; padding: 12px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; }
+        .topbar .brand { font-size: 1.15rem; font-weight: 700; color: #1a73e8; }
+        .content-area { padding: 24px; }
+        .breadcrumb { margin-bottom: 16px; font-size: 0.85rem; }
+
+        .notif-card {
+            background: white; border-radius: 12px; padding: 18px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 16px; transition: all 0.15s;
+            cursor: pointer;
+        }
+        .notif-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .notif-card.unread { background: #f0f7ff; border-left: 4px solid #1a73e8; }
+        .notif-icon {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .notif-body { flex: 1; }
+        .notif-body .title { font-weight: 600; font-size: 0.95rem; margin-bottom: 3px; }
+        .notif-body .content { font-size: 0.85rem; color: #6c757d; }
+        .notif-time { font-size: 0.78rem; color: #adb5bd; white-space: nowrap; }
+        .notif-actions { display: flex; gap: 8px; }
+        .empty-state { text-align: center; padding: 80px 0; color: #adb5bd; }
+        .empty-state i { font-size: 4rem; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="text-center mb-3">
+                <i class="bi bi-mortarboard-fill fs-3"></i>
+                <h5 class="mt-2 mb-0">校园失物招领</h5>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 12px 16px;">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-grid-fill"></i> 首页总览</a></li>
+                <li class="nav-item"><a class="nav-link" href="/found-items"><i class="bi bi-box-seam me-2"></i> 失物招领列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items"><i class="bi bi-search me-2"></i> 寻物启事列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/found-items/create"><i class="bi bi-plus-circle me-2"></i> 捡到物品发布</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items/create"><i class="bi bi-question-circle me-2"></i> 丢失物品发布</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/notifications"><i class="bi bi-bell me-2"></i> 通知中心</a></li>
+                <li class="nav-item"><a class="nav-link" href="/user/profile"><i class="bi bi-person me-2"></i> 个人中心</a></li>
+            </ul>
+        </div>
+
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="topbar">
+                <div class="brand"><i class="bi bi-geo-alt-fill me-2"></i>智慧校园失物招领平台</div>
+                <button onclick="markAllAsRead()" class="btn btn-outline-primary btn-sm" th:if="${notifications != null and notifications.size() > 0}">
+                    <i class="bi bi-check-all me-1"></i>全部已读
+                </button>
+            </div>
+            <div class="content-area">
+                <nav class="breadcrumb">
+                    <a href="/dashboard" class="text-decoration-none text-muted">首页</a><span class="mx-2">/</span><span class="fw-bold">通知中心</span>
+                </nav>
+
+                <div th:if="${notifications != null and notifications.size() > 0}">
+                    <div th:each="notification : ${notifications}"
+                         class="notif-card"
+                         th:classappend="${notification.isRead == 0 ? 'unread' : ''}"
+                         th:attr="data-id=${notification.relatedId},data-type=${notification.type},data-notif-id=${notification.id}">
+                        <!-- 图标 -->
+                        <div class="notif-icon" style="background:#e8f5e9;" th:if="${notification.type == 'CLAIM_APPROVED'}">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        </div>
+                        <div class="notif-icon" style="background:#fdecea;" th:if="${notification.type == 'CLAIM_REJECTED'}">
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                        </div>
+                        <div class="notif-icon" style="background:#fff3e0;" th:if="${notification.type == 'CLAIM_APPLY'}">
+                            <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                        </div>
+                        <div class="notif-icon" style="background:#e3f2fd;" th:if="${notification.type == 'MATCH_FOUND'}">
+                            <i class="bi bi-lightbulb-fill text-info"></i>
+                        </div>
+                        <div class="notif-icon" style="background:#f5f5f5;" th:if="${notification.type != 'CLAIM_APPROVED' and notification.type != 'CLAIM_REJECTED' and notification.type != 'CLAIM_APPLY' and notification.type != 'MATCH_FOUND'}">
+                            <i class="bi bi-bell-fill text-secondary"></i>
+                        </div>
+                        <!-- 内容 -->
+                        <div class="notif-body">
+                            <div class="title" th:text="${notification.title}"></div>
+                            <div class="content" th:text="${notification.content}"></div>
+                        </div>
+                        <!-- 类型标签 -->
+                        <div>
+                            <span class="badge bg-success" th:if="${notification.type == 'CLAIM_APPROVED'}">已通过</span>
+                            <span class="badge bg-danger" th:if="${notification.type == 'CLAIM_REJECTED'}">已拒绝</span>
+                            <span class="badge bg-warning text-dark" th:if="${notification.type == 'CLAIM_APPLY'}">新申请</span>
+                            <span class="badge bg-info" th:if="${notification.type == 'MATCH_FOUND'}">匹配提醒</span>
+                        </div>
+                        <!-- 时间 -->
+                        <div class="notif-time" th:text="${dateUtils.formatTimestamp(notification.createTime)}"></div>
+                        <!-- 操作 -->
+                        <div class="notif-actions">
+                            <button th:if="${notification.isRead == 0}" onclick="markAsRead(this, event)"
+                                    class="btn btn-outline-primary btn-sm" title="标记已读" th:data-notif-id="${notification.id}"><i class="bi bi-check2"></i></button>
+                            <button onclick="viewDetails(this, event)"
+                                    class="btn btn-outline-secondary btn-sm" title="查看详情"
+                                    th:data-notif-id="${notification.id}" th:data-type="${notification.type}" th:data-related-id="${notification.relatedId}"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div th:unless="${notifications != null and notifications.size() > 0}" class="empty-state">
+                    <i class="bi bi-bell-slash"></i>
+                    <h5>暂无通知</h5>
+                    <p class="text-muted">当有认领申请或匹配提醒时，通知会出现在这里</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.notif-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('button')) return;
+                const id = this.getAttribute('data-id');
+                const type = this.getAttribute('data-type');
+                if (id) {
+                    window.location.href = type === 'MATCH_FOUND' ? '/found-items/' + id : '/claims/' + id;
+                }
+            });
+        });
+    });
+
+    function markAsRead(btn, event) {
+        if (!event) return;
+        event.stopPropagation(); event.preventDefault();
+        const id = btn.getAttribute('data-notif-id');
+        if (!id) return;
+        fetch('/notifications/api/' + id + '/read', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({}) })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = event.target.closest('.notif-card');
+                    if (card) { card.classList.remove('unread'); }
+                    btn.style.display = 'none';
+                }
+            })
+            .catch(err => console.error('标记失败:', err));
+    }
+
+    function markAllAsRead() {
+        if (confirm('确定要将所有通知标记为已读吗？')) {
+            fetch('/notifications/api/read-all', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => { if (data.success) window.location.reload(); })
+                .catch(err => console.error('标记全部失败:', err));
+        }
+    }
+
+    function viewDetails(btn, event) {
+        if (event) { event.stopPropagation(); event.preventDefault(); }
+        const notificationId = btn.getAttribute('data-notif-id');
+        const type = btn.getAttribute('data-type');
+        const relatedId = btn.getAttribute('data-related-id');
+        if (!notificationId || !relatedId) return;
+        fetch('/notifications/api/' + notificationId + '/read', { method: 'POST', headers: {'Content-Type': 'application/json'} })
+            .then(() => {
+                window.location.href = type === 'MATCH_FOUND' ? '/found-items/' + relatedId : '/claims/' + relatedId;
+            })
+            .catch(() => {
+                window.location.href = type === 'MATCH_FOUND' ? '/found-items/' + relatedId : '/claims/' + relatedId;
+            });
+    }
+</script>
+</body>
+</html>

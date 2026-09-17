@@ -1,0 +1,36 @@
+<div class="container mt-5">
+    <h2>我的认领管理</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>物品名称</th>
+                        <th>认领人</th>
+                        <th>特征描述</th>
+                        <th>提交时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="claim : ${claims}">
+                        <td th:text="${claim.itemTitle}"></td>
+                        <td th:text="${claim.claimantName}"></td>
+                        <td th:text="${claim.claimDescription}"></td>
+                        <td th:text="${dateUtils.formatTimestamp(claim.createdAt)}"></td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <form th:action="@{/claims/{id}/approve(id=${claim.id})}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-success">通过</button>
+                                </form>
+                                <form th:action="@{/claims/{id}/reject(id=${claim.id})}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-danger">拒绝</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

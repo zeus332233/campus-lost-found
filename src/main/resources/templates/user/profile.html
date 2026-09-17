@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>个人中心 - 校园失物招领平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f5f7fb; }
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a73e8 0%, #0d47a1 100%);
+            color: white; padding-top: 1.5rem;
+        }
+        .sidebar h5 { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.75); border-radius: 8px; margin: 2px 8px; padding: 10px 16px; transition: all 0.2s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+        .sidebar .nav-link i { width: 20px; text-align: center; }
+        .main-content { padding: 0; background: #f5f7fb; }
+        .topbar { background: white; padding: 12px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; }
+        .topbar .brand { font-size: 1.15rem; font-weight: 700; color: #1a73e8; }
+        .content-area { padding: 24px; }
+        .breadcrumb { margin-bottom: 16px; font-size: 0.85rem; }
+
+        /* 信息提示 */
+        .toast-msg { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 280px; }
+
+        /* 用户概况头部 */
+        .profile-header {
+            background: white; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            padding: 28px 32px; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 24px;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; font-weight: 700; flex-shrink: 0;
+            overflow: hidden; position: relative;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-upload { position: relative; cursor: pointer; }
+        .avatar-upload .overlay {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s; color: white; font-size: 0.75rem;
+        }
+        .avatar-upload:hover .overlay { opacity: 1; }
+        .profile-stats { display: flex; gap: 32px; margin-left: auto; flex-wrap: wrap; }
+        .profile-stat { text-align: center; }
+        .profile-stat .num { font-size: 1.6rem; font-weight: 700; color: #1a73e8; }
+        .profile-stat .lbl { font-size: 0.8rem; color: #6c757d; margin-top: 2px; }
+
+        /* 编辑资料卡片 */
+        .form-card {
+            background: white; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 28px 32px;
+            margin-bottom: 24px;
+        }
+        .form-card .section-title { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+
+        /* 物品列表 */
+        .item-card {
+            background: white; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px;
+            display: flex; transition: all 0.15s;
+        }
+        .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .item-card-img {
+            width: 110px; height: 110px; flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;
+        }
+        .item-card-img.lost { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .item-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .item-card-info { padding: 14px 18px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .item-card-info .title { font-weight: 600; margin-bottom: 4px; }
+        .item-card-info .meta { font-size: 0.8rem; color: #adb5bd; }
+        .item-card-actions {
+            padding: 14px 18px; display: flex; flex-direction: column;
+            justify-content: center; gap: 6px; border-left: 1px solid #f0f0f0;
+        }
+        .item-card-actions .btn { font-size: 0.8rem; white-space: nowrap; }
+        .item-card-actions .btn i { font-size: 0.85rem; }
+
+        .empty-state { text-align: center; padding: 40px 0; color: #adb5bd; }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 8px; display: block; }
+
+        /* 分割线 */
+        .section-divider { margin: 24px 0; border: none; height: 1px; background: #e9ecef; }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- 侧边栏 -->
+        <div class="col-md-3 col-lg-2 sidebar">
+            <div class="text-center mb-3">
+                <i class="bi bi-mortarboard-fill fs-3"></i>
+                <h5 class="mt-2 mb-0">校园失物招领</h5>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 12px 16px;">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-grid-fill"></i> 首页总览</a></li>
+                <li class="nav-item"><a class="nav-link" href="/found-items"><i class="bi bi-box-seam me-2"></i> 失物招领列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items"><i class="bi bi-search me-2"></i> 寻物启事列表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/found-items/create"><i class="bi bi-plus-circle me-2"></i> 捡到物品发布</a></li>
+                <li class="nav-item"><a class="nav-link" href="/lost-items/create"><i class="bi bi-question-circle me-2"></i> 丢失物品发布</a></li>
+                <li class="nav-item"><a class="nav-link" href="/notifications"><i class="bi bi-bell me-2"></i> 通知中心
+                    <span th:if="${unreadCount > 0}" class="badge bg-danger rounded-pill float-end" th:text="${unreadCount}">0</span>
+                </a></li>
+                <li class="nav-item"><a class="nav-link active" href="/user/profile"><i class="bi bi-person me-2"></i> 个人中心</a></li>
+            </ul>
+        </div>
+
+        <!-- 主区域 -->
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="topbar">
+                <div class="brand"><i class="bi bi-geo-alt-fill me-2"></i>智慧校园失物招领平台</div>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/notifications" class="position-relative text-decoration-none" style="color:#555;">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span th:if="${unreadCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:0.65rem;" th:text="${unreadCount}">0</span>
+                    </a>
+                    <div class="dropdown">
+                        <a class="dropdown-toggle text-decoration-none" href="#" role="button" data-bs-toggle="dropdown" style="color:#333;">
+                            <i class="bi bi-person-circle me-1"></i><span th:text="${user != null ? user.username : '用户'}">用户</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/user/profile"><i class="bi bi-gear me-2"></i>个人中心</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/user/logout}" method="post">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>退出登录</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <nav class="breadcrumb">
+                    <a href="/dashboard" class="text-decoration-none text-muted">首页</a><span class="mx-2">/</span><span class="fw-bold">个人中心</span>
+                </nav>
+
+                <!-- 成功/错误提示 -->
+                <div th:if="${message}" class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-2"></i><span th:text="${message}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><i class="bi bi-exclamation-circle me-2"></i><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+
+                <!-- 用户概况头部 -->
+                <div class="profile-header">
+                    <div class="avatar-upload" title="点击更换头像" onclick="document.getElementById('avatarInput').click()">
+                        <div class="profile-avatar">
+                            <img th:if="${user.avatar != null and user.avatar != ''}" th:src="${user.avatar}" alt="头像">
+                            <span th:unless="${user.avatar != null and user.avatar != ''}" th:text="${user.username != null ? #strings.substring(user.username, 0, 1) : 'U'}">U</span>
+                        </div>
+                        <div class="overlay"><i class="bi bi-camera-fill me-1"></i>更换</div>
+                        <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+                    </div>
+                    <div>
+                        <h4 class="mb-1" th:text="${user.username}">用户名</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">已验证用户</span>
+                        <div class="mt-2" style="font-size:0.85rem;">
+                            <span class="text-muted" th:if="${user.phone != null and user.phone != ''}"><i class="bi bi-telephone me-1"></i><span th:text="${user.phone}"></span></span>
+                            <span class="text-muted mx-3" th:if="${user.email != null and user.email != ''}"><i class="bi bi-envelope me-1"></i><span th:text="${user.email}"></span></span>
+                            <span class="text-muted" th:if="${user.phone == null or user.phone == '' or user.email == null or user.email == ''}"><i class="bi bi-info-circle me-1"></i>完善资料展示更完整</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="num text-primary" th:text="${myFoundItems != null ? myFoundItems.size() : 0}">0</div>
+                            <div class="lbl">失物招领</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="num text-danger" th:text="${myLostItems != null ? myLostItems.size() : 0}">0</div>
+                            <div class="lbl">寻物启事</div>
+                        </div>
+                        <a href="/found-items/create" class="btn btn-primary btn-sm rounded-pill px-3 align-self-center">
+                            <i class="bi bi-plus-lg"></i> 发布信息
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 个人信息编辑 -->
+                <div class="form-card">
+                    <div class="section-title"><i class="bi bi-pencil-square me-2"></i>编辑资料</div>
+                    <form th:action="@{/user/profile}" method="post" id="profileForm">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold small">用户名</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control bg-light" th:value="${user.username}" disabled>
+                                </div>
+                                <div class="form-text">用户名注册后不可修改</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold small">手机号码</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="tel" class="form-control" name="phone" th:value="${user.phone}" placeholder="请输入手机号码">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold small">邮箱地址</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" name="email" th:value="${user.email}" placeholder="请输入邮箱地址">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold small">新密码</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" name="password" id="password" placeholder="不修改请留空">
+                                </div>
+                                <div class="form-text">留空则不修改密码</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold small">确认新密码</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" class="form-control" name="confirmPassword" id="confirmPassword" placeholder="请确认新密码">
+                                </div>
+                                <div id="pwdFeedback" class="form-text text-danger d-none">两次输入的密码不一致</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="/dashboard" class="btn btn-outline-secondary"><i class="bi bi-house me-1"></i>返回首页</a>
+                            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i>保存修改</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 我发布的失物招领 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-box-seam text-primary me-2"></i>我发布的失物招领</h5>
+                    <a href="/found-items/create" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-plus me-1"></i>发布</a>
+                </div>
+                <div th:if="${myFoundItems != null and not myFoundItems.isEmpty()}">
+                    <div th:each="item : ${myFoundItems}" class="item-card">
+                        <a th:href="@{/found-items/{id}(id=${item.id})}" class="item-card-img" style="text-decoration:none;">
+                            <img th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" th:src="${item.imageUrls.split(',')[0]}">
+                            <i th:unless="${item.imageUrls != null and !item.imageUrls.isEmpty()}" class="bi bi-box-seam"></i>
+                        </a>
+                        <a th:href="@{/found-items/{id}(id=${item.id})}" class="item-card-info text-decoration-none text-reset">
+                            <div class="title" th:text="${item.title}">物品标题</div>
+                            <div class="meta">
+                                <i class="bi bi-geo-alt me-1"></i><span th:text="${item.location != null ? item.location : '未填写'}">地点</span>
+                                <span class="mx-2">·</span>
+                                <span th:text="${item.createdAt != null ? dateUtils.formatTimestamp(item.createdAt) : ''}">日期</span>
+                                <span class="mx-2">·</span>
+                                <span class="badge rounded-pill bg-warning text-dark" th:if="${item.status == 'SEARCHING'}">待认领</span>
+                                <span class="badge rounded-pill bg-success" th:if="${item.status == 'CLAIMED'}">已认领</span>
+                            </div>
+                        </a>
+                        <div class="item-card-actions">
+                            <a th:href="@{/found-items/{id}/edit(id=${item.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> 编辑</a>
+                            <form th:action="@{/found-items/{id}/delete(id=${item.id})}" method="post" onsubmit="return confirm('确定要删除这条失物招领吗？');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> 删除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div th:unless="${myFoundItems != null and not myFoundItems.isEmpty()}" class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>还没有发布失物招领</p>
+                    <a href="/found-items/create" class="btn btn-outline-primary btn-sm rounded-pill"><i class="bi bi-plus me-1"></i>去发布</a>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- 我发布的寻物启事 -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-search text-danger me-2"></i>我发布的寻物启事</h5>
+                    <a href="/lost-items/create" class="btn btn-sm btn-outline-danger rounded-pill"><i class="bi bi-plus me-1"></i>发布</a>
+                </div>
+                <div th:if="${myLostItems != null and not myLostItems.isEmpty()}">
+                    <div th:each="item : ${myLostItems}" class="item-card">
+                        <a th:href="@{/lost-items/{id}(id=${item.id})}" class="item-card-img lost" style="text-decoration:none;">
+                            <img th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" th:src="${item.imageUrls.split(',')[0]}">
+                            <i th:unless="${item.imageUrls != null and !item.imageUrls.isEmpty()}" class="bi bi-search"></i>
+                        </a>
+                        <a th:href="@{/lost-items/{id}(id=${item.id})}" class="item-card-info text-decoration-none text-reset">
+                            <div class="title" th:text="${item.title}">物品标题</div>
+                            <div class="meta">
+                                <i class="bi bi-geo-alt me-1"></i><span th:text="${item.location != null ? item.location : '未填写'}">地点</span>
+                                <span class="mx-2">·</span>
+                                <span th:text="${item.createdAt != null ? dateUtils.formatTimestamp(item.createdAt) : ''}">日期</span>
+                                <span class="mx-2">·</span>
+                                <span class="badge rounded-pill bg-warning text-dark" th:if="${item.status == 'SEARCHING'}">寻找中</span>
+                                <span class="badge rounded-pill bg-success" th:if="${item.status == 'CLAIMED'}">已找到</span>
+                            </div>
+                        </a>
+                        <div class="item-card-actions">
+                            <a th:href="@{/lost-items/{id}/edit(id=${item.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> 编辑</a>
+                            <form th:action="@{/lost-items/{id}/delete(id=${item.id})}" method="post" onsubmit="return confirm('确定要删除这条寻物启事吗？');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> 删除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div th:unless="${myLostItems != null and not myLostItems.isEmpty()}" class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>还没有发布寻物启事</p>
+                    <a href="/lost-items/create" class="btn btn-outline-danger btn-sm rounded-pill"><i class="bi bi-plus me-1"></i>去发布</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 密码一致性实时校验
+    var password = document.getElementById('password');
+    var confirmPassword = document.getElementById('confirmPassword');
+    var pwdFeedback = document.getElementById('pwdFeedback');
+
+    if (confirmPassword) {
+        confirmPassword.addEventListener('input', function() {
+            var pwd = password ? password.value : '';
+            var confirmPwd = this.value;
+            if (pwd && confirmPwd && pwd !== confirmPwd) {
+                this.classList.add('is-invalid');
+                pwdFeedback.classList.remove('d-none');
+            } else if (pwd && confirmPwd && pwd === confirmPwd) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                pwdFeedback.classList.add('d-none');
+            } else {
+                this.classList.remove('is-invalid', 'is-valid');
+                pwdFeedback.classList.add('d-none');
+            }
+        });
+    }
+
+    // 提交前最终校验
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        var pwd = password ? password.value : '';
+        var confirmPwd = confirmPassword ? confirmPassword.value : '';
+        if (pwd && confirmPwd && pwd !== confirmPwd) {
+            e.preventDefault();
+            alert('两次输入的密码不一致，请检查。');
+        }
+    });
+
+    // 头像上传
+    var avatarInput = document.getElementById('avatarInput');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过 5MB');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', file);
+
+            // 先上传到通用图片接口
+            fetch('/api/upload/image', { method: 'POST', body: formData })
+                .then(function(r) { return r.json(); })
+                .then(function(uploadRes) {
+                    if (!uploadRes.success || !uploadRes.data || !uploadRes.data.imageUrl) {
+                        throw new Error(uploadRes.message || '图片上传失败');
+                    }
+                    var imageUrl = uploadRes.data.imageUrl;
+                    // 再保存到用户头像字段
+                    var saveData = new URLSearchParams();
+                    saveData.append('avatarUrl', imageUrl);
+                    return fetch('/user/avatar', { method: 'POST', body: saveData });
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(saveRes) {
+                    if (saveRes.success) {
+                        alert('头像更换成功');
+                        location.reload();
+                    } else {
+                        alert(saveRes.message || '头像保存失败');
+                    }
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    alert('头像上传失败：' + err.message);
+                })
+                .finally(function() {
+                    avatarInput.value = '';
+                });
+        });
+    }
+</script>
+</body>
+</html>
+

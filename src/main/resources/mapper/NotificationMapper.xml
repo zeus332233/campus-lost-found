@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.NotificationMapper">
+    <insert id="insert" parameterType="com.example.demo.model.Notification">
+        INSERT INTO notification (
+            user_id, type, title, content, related_id, is_read, create_time
+        ) VALUES (
+            #{userId}, #{type}, #{title}, #{content}, #{relatedId}, #{isRead}, #{createTime}
+        )
+    </insert>
+
+    <select id="selectByUserId" parameterType="java.lang.Long" resultType="com.example.demo.model.Notification">
+        SELECT id, user_id, type, title, content, related_id, is_read AS isRead, create_time
+        FROM notification WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <update id="updateReadStatus" parameterType="java.util.Map">
+        UPDATE notification SET is_read = #{isRead, jdbcType=INTEGER} WHERE id = #{id, jdbcType=BIGINT}
+    </update>
+
+    <update id="updateReadStatusByTypeAndRelatedId" parameterType="java.util.Map">
+        UPDATE notification SET is_read = #{isRead, jdbcType=INTEGER} WHERE type = #{type} AND related_id = #{relatedId, jdbcType=BIGINT}
+    </update>
+
+    <update id="updateAllReadStatus" parameterType="java.util.Map">
+        UPDATE notification SET is_read = #{isRead, jdbcType=INTEGER} WHERE user_id = #{userId, jdbcType=BIGINT}
+    </update>
+
+    <select id="countUnreadByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM notification WHERE user_id = #{userId} AND is_read = 0
+    </select>
+</mapper>

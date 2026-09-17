@@ -1,0 +1,53 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### 编译输出 ###
+bin/
+target/
+
+### 上传文件（用户图片，不应入库）###
+uploads/
+
+### 敏感配置（含数据库密码）###
+src/main/resources/application.yml
+
+### 临时文件 ###
+*.log
+*.tmp
+tmp_*.py
+Postman-*.json
+Postman-*.md
+Simple-Postman-Tests.json
+FoundItems-Performance-Test-Data.json
+数据库创建test用户的SQL语句.sql

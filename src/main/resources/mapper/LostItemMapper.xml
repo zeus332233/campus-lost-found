@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.LostItemMapper">
+    <resultMap id="BaseResultMap" type="com.example.demo.model.LostItem">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="category" property="category"/>
+        <result column="location" property="location"/>
+        <result column="lost_time" property="lostTime"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="contact_email" property="contactEmail"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="image_urls" property="imageUrls"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.example.demo.model.LostItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO lost_item (
+            user_id, title, description, category, location, lost_time, contact_phone, contact_email, status, created_at, updated_at, image_urls
+        ) VALUES (
+            #{userId}, #{title}, #{description}, #{category}, #{location}, #{lostTime},
+            #{contactPhone}, #{contactEmail}, #{status}, UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000, #{imageUrls}
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.example.demo.model.LostItem">
+        UPDATE lost_item
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="lostTime != null">lost_time = #{lostTime},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="contactEmail != null">contact_email = #{contactEmail},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="imageUrls != null">image_urls = #{imageUrls},</if>
+            updated_at = UNIX_TIMESTAMP()*1000
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE lost_item
+        SET status = #{status}, updated_at = UNIX_TIMESTAMP()*1000
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM lost_item WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM lost_item WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM lost_item WHERE user_id = #{userId} ORDER BY created_at DESC
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM lost_item ORDER BY created_at DESC
+    </select>
+
+    <select id="selectLatest" resultMap="BaseResultMap">
+        SELECT * FROM lost_item ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+    <!-- 分页搜索查询 -->
+    <select id="search" resultMap="BaseResultMap">
+        SELECT * FROM lost_item
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="location != null and location != ''">
+                AND location LIKE CONCAT('%', #{location}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null">
+                AND lost_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND lost_time &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 搜索总数 -->
+    <select id="countSearch" resultType="int">
+        SELECT COUNT(*) FROM lost_item
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="location != null and location != ''">
+                AND location LIKE CONCAT('%', #{location}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="startDate != null">
+                AND lost_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND lost_time &lt;= #{endDate}
+            </if>
+        </where>
+    </select>
+
+    <!-- 匹配查询：用于智能匹配引擎 -->
+    <select id="selectByCategoryAndStatus" resultMap="BaseResultMap">
+        SELECT * FROM lost_item
+        WHERE category = #{category} AND status = #{status}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM lost_item
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM lost_item WHERE status = #{status}
+    </select>
+</mapper>
